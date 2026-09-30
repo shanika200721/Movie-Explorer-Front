@@ -1,12 +1,18 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { useAuth } from './state/AppProviders';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import AppShell from './components/AppShell';
+import BrowsePage from './pages/BrowsePage';
+import FavoritesPage from './pages/FavoritesPage';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import MoviesPage from './pages/MoviesPage';
 import MovieDetailsPage from './pages/MovieDetailsPage';
+import RegisterPage from './pages/RegisterPage';
+import SearchPage from './pages/SearchPage';
+import { useAuth } from './state/AppProviders';
 
-function PrivateRoute({ children }) {
+function ProtectedRoute() {
   const { token } = useAuth();
-  return token ? children : <Navigate to="/login" replace />;
+  const location = useLocation();
+  return token ? <AppShell /> : <Navigate to="/login" replace state={{ from: location.pathname }} />;
 }
 
 export default function App() {
@@ -14,8 +20,15 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<PrivateRoute><MoviesPage /></PrivateRoute>} />
-        <Route path="/movies/:id" element={<PrivateRoute><MovieDetailsPage /></PrivateRoute>} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/browse" element={<BrowsePage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/movies/:id" element={<MovieDetailsPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -2,9 +2,9 @@ node_modules/
 build/
 .env
 .env.*
-!.env.example
 npm-debug.log*
 .vercel/
 
 .vercel
 .env*
+!.env.example

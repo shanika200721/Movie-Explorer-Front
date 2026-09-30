@@ -1,69 +1,32 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
-import api from '../api/client';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import api, { apiErrorMessage } from '../api/client';
+import AuthForm from '../components/AuthForm';
 import { useAuth } from '../state/AppProviders';
 
 export default function LoginPage() {
-  const { token, login } = useAuth();
-  const [isRegistering, setIsRegistering] = useState(false);
+  const { token, login, authNotice, clearAuthNotice } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  if (token) {
-    return <Navigate to="/" replace />;
-  }
+  if (token) return <Navigate to="/" replace />;
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError('');
-    setLoading(true);
+    setError(''); setLoading(true);
     try {
-      const path = isRegistering ? '/auth/register' : '/auth/login';
-      const { data } = await api.post(path, form);
+      const { data } = await api.post('/auth/login', form);
       login(data);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Authentication failed');
-    } finally {
-      setLoading(false);
-    }
+      navigate(location.state?.from || '/', { replace: true });
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, 'Login failed. Check your username and password.'));
+    } finally { setLoading(false); }
   }
 
-  return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
-      <Paper component="form" onSubmit={handleSubmit} sx={{ width: 'min(420px, 100%)', p: 3 }}>
-        <Stack spacing={2.2}>
-          <Box>
-            <Typography variant="h4" fontWeight={900}>Movie Explorer</Typography>
-            <Typography color="text.secondary">Sign in to search TMDb movies.</Typography>
-          </Box>
-          {error && <Alert severity="error">{error}</Alert>}
-          <TextField
-            label="Username"
-            value={form.username}
-            onChange={(event) => setForm({ ...form, username: event.target.value })}
-            inputProps={{ minLength: 3 }}
-            required
-            fullWidth
-          />
-          <TextField
-            label="Password"
-            type="password"
-            value={form.password}
-            onChange={(event) => setForm({ ...form, password: event.target.value })}
-            inputProps={{ minLength: 6 }}
-            required
-            fullWidth
-          />
-          <Button type="submit" variant="contained" disabled={loading} size="large">
-            {loading ? 'Please wait' : isRegistering ? 'Create account' : 'Login'}
-          </Button>
-          <Button onClick={() => setIsRegistering((value) => !value)}>
-            {isRegistering ? 'Use existing account' : 'Create a new account'}
-          </Button>
-        </Stack>
-      </Paper>
-    </Box>
-  );
+  return <AuthForm title="Welcome back" subtitle="Sign in to continue exploring movies." submitLabel="Sign in"
+    alternateText="New here?" alternateLabel="Create an account" alternateTo="/register"
+    form={form} setForm={setForm} error={error} notice={authNotice} loading={loading}
+    onSubmit={(event) => { clearAuthNotice(); handleSubmit(event); }} />;
 }
