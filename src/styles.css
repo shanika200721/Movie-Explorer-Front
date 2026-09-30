@@ -1,0 +1,5 @@
+html { overflow-y: scroll; }
+body { margin: 0; }
+button, input { font: inherit; }
+.video-frame { position: relative; width: 100%; max-width: 960px; aspect-ratio: 16 / 9; background: #000; }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
